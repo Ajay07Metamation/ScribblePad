@@ -8,8 +8,41 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="data\redo.png" />
-    <None Remove="data\undo.png" />
+    <Compile Remove="data\**" />
+    <EmbeddedResource Remove="data\**" />
+    <None Remove="data\**" />
+    <Page Remove="data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove=".gitignore" />
+    <None Remove="Icons\clear.png" />
+    <None Remove="Icons\eraser.png" />
+    <None Remove="Icons\open.png" />
+    <None Remove="Icons\paint-bucket.png" />
+    <None Remove="Icons\pen.png" />
+    <None Remove="Icons\redo.png" />
+    <None Remove="Icons\save.png" />
+    <None Remove="Icons\undo.png" />
+    <None Remove="Icons\width.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Icons\clear.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\eraser.png" />
+    <Resource Include="Icons\open.png" />
+    <Resource Include="Icons\paint-bucket.png" />
+    <Resource Include="Icons\pen.png" />
+    <Resource Include="Icons\redo.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\save.png" />
+    <Resource Include="Icons\undo.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\width.png" />
   </ItemGroup>
 
 </Project>

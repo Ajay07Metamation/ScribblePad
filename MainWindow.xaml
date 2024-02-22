@@ -5,23 +5,61 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Scribble"
         mc:Ignorable="d"
-        Title="SCRIBBLE PAD" Background="Transparent" Height="450" Width="800" 
-        MouseDown="Window_MouseDown" MouseUp="Window_MouseUp" MouseMove="Window_MouseMove" >
-    <Grid Height="50" VerticalAlignment="Top">
-        <Button x:Name="PenColour" Background="Transparent" BorderThickness="0" Width="40" Margin="10,5" 
-                HorizontalAlignment="Left" MouseEnter="PenColour_MouseEnter" Click="PenColour_Click">
-            <Image Source="C:\Users\nehrujiaj\OneDrive - Trumpf Metamation Pvt Ltd\Pictures\paint-bucket.png"/>
-        </Button>
-        <Button x:Name="Eraser" Click="Eraser_Click" Background="Transparent" BorderThickness="0" Width= "40" Margin="60,5,650,5" 
-                MouseEnter="Eraser_MouseEnter">
-            <Image Source="C:\Users\nehrujiaj\OneDrive - Trumpf Metamation Pvt Ltd\Pictures\eraser.png"/>
-        </Button>
-        <Button x:Name="Save" Click="Save_Click" Background="Transparent" BorderThickness="0" Width="40" Margin="5,5,450,5" >
-            <Image Source="C:\Users\nehrujiaj\OneDrive - Trumpf Metamation Pvt Ltd\Pictures\save.png"/>
-        </Button>
-        <Button x:Name="Load" Click="Load_Click" Background="Transparent" BorderThickness="0" Width="40" Margin="5,5,300,5" >
-            <Image Source="C:\Users\nehrujiaj\OneDrive - Trumpf Metamation Pvt Ltd\Pictures\open.png"/>
-        </Button>
-        <Separator VerticalAlignment="Bottom" Background="MediumPurple"/>
+        Title="SCRIBBLE PAD" Background="Transparent" Height="450" Width="800">
+    <Window.Resources>
+        <Style x:Key="ButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="ToolTip" Value="{Binding Name, RelativeSource={RelativeSource Self}}"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Height="60" VerticalAlignment="Top" Background="Black">
+            <Menu Background="White">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Open" Click="Open_Click"/>
+                    <MenuItem Header="_Save" Click="Save_Click"/>
+                </MenuItem>
+            </Menu>
+            <ToolBarTray Grid.Row="0" VerticalAlignment="Bottom" DockPanel.Dock="Top" HorizontalAlignment="Center">
+                <ToolBar  Height="40" Width="800">
+                    <Button x:Name="Pen" Style="{StaticResource ButtonStyle}" Click="Pen_Click" Margin="10,5">
+                        <Image Source="Icons/pen.png"/>
+                    </Button>
+                    <Button x:Name="Eraser" Style="{StaticResource ButtonStyle}" Click="Eraser_Click" Margin="5,5">
+                        <Image Source="Icons/eraser.png"/>
+                    </Button>
+                    <Button x:Name="Undo" Style="{StaticResource ButtonStyle}" Click="Undo_Click" Margin="5,5">
+                        <Image Source="Icons/undo.png"/>
+                    </Button>
+                    <Button x:Name="Redo" Style="{StaticResource ButtonStyle}" Click="Redo_Click" Margin="5,5">
+                        <Image Source="Icons/redo.png"/>
+                    </Button>
+                    <Button x:Name="Clear" Style="{StaticResource ButtonStyle}" Click="Clear_Click" Margin="5,5">
+                        <Image Source="Icons/clear.png"/>
+                    </Button>
+                    <TextBlock x:Name="thickness" Width="300" Height="40">
+                        <TextBlock.ToolTip>
+                            <ToolTip Content="Thickness"/>
+                        </TextBlock.ToolTip>
+                        <InlineUIContainer>
+                            <Image Source="Icons/width.png" Width="45" Height="30"/>
+                        </InlineUIContainer>
+                        <Slider x:Name="ThicknessSlider" VerticalAlignment="Center" Width="200" Height="21" 
+                                Minimum="1" Maximum="10" TickFrequency="1" Value="3" ValueChanged="ThicknessSlider_ValueChanged" 
+                                IsSnapToTickEnabled="True" TickPlacement="BottomRight"/>
+                        <TextBlock Text="{Binding ElementName=ThicknessSlider, Path=Value}" VerticalAlignment="Center" Width="100" 
+                                   Margin="5,-10"/>
+                    </TextBlock>
+                </ToolBar>
+            </ToolBarTray>
+        </Grid>
+        <Canvas Grid.Row="1" Background="Transparent" MouseDown="Drawing_MouseDown" MouseUp="Drawing_MouseUp" 
+                MouseMove="Drawing_MouseMove"/>
     </Grid>
 </Window>
