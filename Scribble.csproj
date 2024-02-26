@@ -5,6 +5,7 @@
     <TargetFramework>net7.0-windows</TargetFramework>
 	  <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,10 +18,13 @@
   <ItemGroup>
     <None Remove=".gitignore" />
     <None Remove="Icons\clear.png" />
+    <None Remove="Icons\ellipse.png" />
     <None Remove="Icons\eraser.png" />
+    <None Remove="Icons\line.png" />
     <None Remove="Icons\open.png" />
     <None Remove="Icons\paint-bucket.png" />
     <None Remove="Icons\pen.png" />
+    <None Remove="Icons\rectangle.png" />
     <None Remove="Icons\redo.png" />
     <None Remove="Icons\save.png" />
     <None Remove="Icons\undo.png" />
@@ -31,10 +35,13 @@
     <Resource Include="Icons\clear.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Icons\ellipse.png" />
     <Resource Include="Icons\eraser.png" />
+    <Resource Include="Icons\line.png" />
     <Resource Include="Icons\open.png" />
     <Resource Include="Icons\paint-bucket.png" />
     <Resource Include="Icons\pen.png" />
+    <Resource Include="Icons\rectangle.png" />
     <Resource Include="Icons\redo.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

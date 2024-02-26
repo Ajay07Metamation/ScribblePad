@@ -4,10 +4,8 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
-using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
-using ColorConverter = System.Windows.Media.ColorConverter;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using OpenFileDialog = System.Windows.Forms.OpenFileDialog;
 using Pen = System.Windows.Media.Pen;
@@ -25,14 +23,24 @@ namespace Scribble {
          mPen = new Pen (Brushes.White, 3);
       }
 
+      #region SelectShape-------------------------------------------------------------------------
+
+      // Select the type of shape
+      void Pen_Click (object sender, RoutedEventArgs e) => mType = 2;
+      void Line_Click (object sender, RoutedEventArgs e) => mType = 3;
+      void Rectangle_Click (object sender, RoutedEventArgs e) => mType = 4;
+      void Ellipse_Click (object sender, RoutedEventArgs e) => mType = 5;
+      #endregion
+
       #region Undo-Redo-------------------------------------------------------------------------
       /// <summary>Undo a scribble</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
       void Undo_Click (object sender, RoutedEventArgs e) {
-         if (mUndo.Count != 0) {
-            mRedo.Push (mUndo.Pop ());
-            mDrawing.RemoveAt (mDrawing.Count - 1);
+         if (mShapes.Count != 0) {
+            int last = mShapes.Count - 1;
+            mUndoRedo.Push (mShapes[last]);
+            mShapes.RemoveAt (last);
             InvalidateVisual ();
          }
       }
@@ -41,10 +49,9 @@ namespace Scribble {
       /// <param name="sender"></param>
       /// <param name="e"></param>
       void Redo_Click (object sender, RoutedEventArgs e) {
-         if (mRedo.Count != 0) {
-            var data = mRedo.Pop ();
-            mUndo.Push (data);
-            mDrawing.Add (data);
+         if (mUndoRedo.Count != 0) {
+            var data = mUndoRedo.Pop ();
+            mShapes.Add (data);
             InvalidateVisual ();
          }
       }
@@ -54,8 +61,7 @@ namespace Scribble {
       /// <summary>Changes the colour of the pen</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
-      private void Pen_Click (object sender, RoutedEventArgs e) {
-         mIsDrawing = true;
+      void PenColor_Click (object sender, RoutedEventArgs e) {
          var colour = new ColorDialog ();
          if (colour.ShowDialog () == System.Windows.Forms.DialogResult.OK)
             mPen.Brush = new SolidColorBrush (Color.FromArgb (colour.Color.A, colour.Color.R,
@@ -67,9 +73,9 @@ namespace Scribble {
       /// <summary>Choose the eraser tool</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
-      private void Eraser_Click (object sender, RoutedEventArgs e) {
+      void Eraser_Click (object sender, RoutedEventArgs e) {
+         mType = 1;
          mPen.Brush = Brushes.Black;
-         mIsDrawing = false;
       }
       #endregion
 
@@ -81,7 +87,6 @@ namespace Scribble {
          if (mPen != null) {
             mPen.Thickness = e.NewValue;
          }
-         mIsDrawing = true;
       }
       #endregion
 
@@ -96,9 +101,10 @@ namespace Scribble {
 
       /// <summary>Clear the scribbles list and undo and redo stack</summary>
       void ClearDrawing () {
-         mDrawing.Clear ();
-         mUndo.Clear ();
-         mRedo.Clear ();
+         if (mShapes.Count != 0) {
+            mShapes.Clear ();
+            mUndoRedo.Clear ();
+         }
       }
       #endregion
 
@@ -106,10 +112,11 @@ namespace Scribble {
       /// <summary>Save the drawing</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
-      private void Save_Click (object sender, RoutedEventArgs e) {
-         SaveFileDialog save = new ();
-         save.FileName = "scribble.txt";
-         save.Filter = "Text files (*.txt)|*.txt|Binary files (*.bin)|*.bin";
+      void Save_Click (object sender, RoutedEventArgs e) {
+         SaveFileDialog save = new () {
+            FileName = "scribble.txt",
+            Filter = "Text files (*.txt)|*.txt|Binary files (*.bin)|*.bin"
+         };
          if (save.ShowDialog () == System.Windows.Forms.DialogResult.OK) {
             if (save.FilterIndex == 1) SaveText (save.FileName);
             else SaveBinary (save.FileName);
@@ -119,22 +126,15 @@ namespace Scribble {
       /// <summary>Save the drawing as a bin file</summary>
       /// <param name="path">Path of the bin file</param>
       void SaveBinary (string path) {
-         if (mDrawing.Count > 0)
+         if (mShapes.Count > 0)
             using (BinaryWriter tw = new (File.Open (path, FileMode.Create))) {
-               tw.Write (mDrawing.Count); // Total drawing count
-               foreach (var (brush, thickness, points) in mDrawing) {
-                  if (brush is SolidColorBrush sb) { // Brush color
-                     tw.Write (sb.Color.A);
-                     tw.Write (sb.Color.R);
-                     tw.Write (sb.Color.G);
-                     tw.Write (sb.Color.B);
-                  }
-                  tw.Write (thickness); // Brush thickness
-                  tw.Write (points.Count); // Total number of points in one scribble
-                  foreach (var point in points) {
-                     tw.Write (point.X); // X coordinate of point
-                     tw.Write (point.Y); // Y coordinate of point
-                  }
+               tw.Write (mShapes.Count); // Total drawing count
+               foreach (var shape in mShapes) {
+                  tw.Write (shape.Type); // Type of shape
+                  if (shape is Scribble scribble) scribble.SaveBinary (tw);
+                  else if (shape is Line line) line.SaveBinary (tw);
+                  else if (shape is Rectangle rectangle) rectangle.SaveBinary (tw);
+                  else if (shape is Ellipse ellipse) ellipse.SaveBinary (tw);
                }
             }
       }
@@ -142,17 +142,15 @@ namespace Scribble {
       /// <summary>Save the drawing as a text file</summary>
       /// <param name="path">Path of the text file</param>
       void SaveText (string path) {
-         if (mDrawing.Count > 0) {
+         if (mShapes.Count > 0) {
             using (TextWriter tw = new StreamWriter (path, true)) {
-               tw.WriteLine (mDrawing.Count); // Total drawing count
-               foreach (var (brush, thickness, points) in mDrawing) {
-                  tw.WriteLine (brush.ToString ()); // Brush color
-                  tw.WriteLine (thickness); // Brush thickness
-                  tw.WriteLine (points.Count); // Total number of points in one scribble
-                  foreach (var point in points) {
-                     tw.WriteLine (point.X); // X coordinate of point
-                     tw.WriteLine (point.Y); // Y coordinate of point
-                  }
+               tw.WriteLine (mShapes.Count); // Total drawing count
+               foreach (var shape in mShapes) {
+                  tw.WriteLine (shape.Type); // Type of shape
+                  if (shape is Scribble scribble) scribble.SaveText (tw);
+                  else if (shape is Line line) line.SaveText (tw);
+                  else if (shape is Rectangle rectangle) rectangle.SaveText (tw);
+                  else if (shape is Ellipse ellipse) ellipse.SaveText (tw);
                }
             }
          }
@@ -164,9 +162,11 @@ namespace Scribble {
       /// <summary>Load the drawing</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
-      private void Open_Click (object sender, RoutedEventArgs e) {
-         OpenFileDialog load = new ();
-         load.Filter = "Text files (*.txt)|*.txt|Binary files (*.bin)|*.bin";
+      void Open_Click (object sender, RoutedEventArgs e) {
+         OpenFileDialog load = new () {
+            FileName = "scribble.txt",
+            Filter = "Text files (*.txt)|*.txt|Binary files (*.bin)|*.bin"
+         };
          if (load.ShowDialog () == System.Windows.Forms.DialogResult.OK) {
             string path = load.FileName;
             if (path != null) {
@@ -181,25 +181,25 @@ namespace Scribble {
       void LoadBinary (string filePath) {
          ClearDrawing ();
          using (BinaryReader reader = new (File.Open (filePath, FileMode.Open))) {
+            Shapes shape = null;
             var sCount = reader.ReadInt32 (); // Total drawing count
             for (int i = 0; i < sCount; i++) {
-               SolidColorBrush brush = new ();
-               double thickness;
-               List<Point> points = new ();
-               byte a = reader.ReadByte ();
-               byte r = reader.ReadByte ();
-               byte g = reader.ReadByte ();
-               byte b = reader.ReadByte ();
-               brush.Color = Color.FromArgb (a, r, g, b); // Brush color
-               thickness = reader.ReadDouble (); // Pen thickness
-               int pCount = reader.ReadInt32 (); // Total number of points in one scribble
-               for (int j = 0; j < pCount; j++) {
-                  (var x, var y) = (reader.ReadDouble (), reader.ReadDouble ()); // X & Y co-ordinate of point
-                  Point p = new (x, y);
-                  points.Add (p);
+               var type = reader.ReadInt32 (); // Type of shape
+               switch (type) {
+                  case 1:
+                     shape = new Scribble (new Pen (Brushes.Black, 1));
+                     break;
+                  case 2:
+                     shape = new Line (new Pen (Brushes.Black, 1));
+                     break;
+                  case 3:
+                     shape = new Rectangle (new Pen (Brushes.Black, 1));
+                     break;
+                  case 4:
+                     shape = new Ellipse (new Pen (Brushes.Black, 1));
+                     break;
                }
-               mDrawing.Add ((brush, thickness, points));
-               mUndo.Push ((brush, thickness, points));
+               mShapes.Add (shape.LoadBinary (reader));
             }
          }
          InvalidateVisual ();
@@ -210,22 +210,25 @@ namespace Scribble {
       void LoadText (string filePath) {
          ClearDrawing ();
          using (StreamReader reader = new (filePath)) {
+            Shapes shape = null;
             int.TryParse (reader.ReadLine (), out int dCount); // Total drawing count
             for (int i = 0; i < dCount; i++) {
-               SolidColorBrush brush;
-               List<Point> points = new ();
-               string line = reader.ReadLine ();
-               brush = new SolidColorBrush ((Color)ColorConverter.ConvertFromString (line)); // Brush color
-               double.TryParse (reader.ReadLine (), out double thickness); // Pen thickness
-               int.TryParse (reader.ReadLine (), out int pCount); // Total number of points in one scribble
-               for (int j = 0; j < pCount; j++) {
-                  double.TryParse (reader.ReadLine (), out double x); // X co-ordinate of point
-                  double.TryParse (reader.ReadLine (), out double y); // Y co-ordinate of point
-                  Point point = new Point (x, y);
-                  points.Add (point);
+               int.TryParse (reader.ReadLine (), out int type); // Type of shape
+               switch (type) {
+                  case 1:
+                     shape = new Scribble (new Pen (Brushes.Black, 1));
+                     break;
+                  case 2:
+                     shape = new Line (new Pen (Brushes.Black, 1));
+                     break;
+                  case 3:
+                     shape = new Rectangle (new Pen (Brushes.Black, 1));
+                     break;
+                  case 4:
+                     shape = new Ellipse (new Pen (Brushes.Black, 1));
+                     break;
                }
-               mDrawing.Add ((brush, thickness, points));
-               mUndo.Push ((brush, thickness, points));
+               mShapes.Add (shape.LoadText (reader));
             }
          }
          InvalidateVisual ();
@@ -236,60 +239,105 @@ namespace Scribble {
       /// <summary>To start the drawing and collect the start point</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
-      private void Drawing_MouseDown (object sender, MouseButtonEventArgs draw) {
-         Reset ();
+      void Drawing_MouseDown (object sender, MouseButtonEventArgs draw) {
          if (draw.LeftButton == MouseButtonState.Pressed) {
-            if (mIsDrawing && mRedo.Count > 0) mRedo.Clear ();
-            mStartPoint = draw.GetPosition (this);
-            mPoints.Add (mStartPoint);
+            mIsDrawing = true;
+            if (mUndoRedo.Count > 0) mUndoRedo.Clear ();
+            var startPoint = draw.GetPosition (this);// Start point of the drawing
+            switch (mType) {
+               case 1 or 2: // Erase or scribble
+                  mScribble = new (mPen);
+                  mShapes.Add (mScribble);
+                  mScribble.AddPoints (startPoint);
+                  break;
+               case 3: // Line
+                  mLine = new (mPen);
+                  mShapes.Add (mLine);
+                  mLine.StartPoint = startPoint;
+                  break;
+               case 4: // Rectangle
+                  mRectangle = new (mPen);
+                  mShapes.Add (mRectangle);
+                  mRectangle.StartPoint = startPoint;
+                  break;
+               case 5: // Ellipse
+                  mEllipse = new (mPen);
+                  mShapes.Add (mEllipse);
+                  mEllipse.StartPoint = startPoint;
+                  break;
+            }
          }
       }
 
       /// <summary>Add drawing to the list when mouse is released</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
-      private void Drawing_MouseUp (object sender, MouseButtonEventArgs draw) {
-         if (draw.ButtonState == MouseButtonState.Released) {
-            mIsDrawing = false;
+      void Drawing_MouseUp (object sender, MouseButtonEventArgs draw) {
+         if (mIsDrawing && draw.ButtonState == MouseButtonState.Released) {
+            Point endPoint = draw.GetPosition (this);
+            switch (mType) {
+               case 1 or 2: // Erase or scribble
+                  mScribble.AddPoints (endPoint);
+                  break;
+               case 3: // Line
+                  mLine.EndPoint = endPoint;
+                  break;
+               case 4: // Rectangle
+                  mRectangle.EndPoint = endPoint;
+                  break;
+               case 5: // Ellipse
+                  mEllipse.EndPoint = endPoint;
+                  break;
+            }
             InvalidateVisual ();
+            mIsDrawing = false;
+            if (mType == 1) mPen.Brush = Brushes.White; // Set default colour to white after erasing
          }
       }
 
       /// <summary>Update state of drawing and collect current point</summary>
       /// <param name="sender"></param>
       /// <param name="e"></param>
-      private void Drawing_MouseMove (object sender, MouseEventArgs draw) {
-         if (draw.LeftButton == MouseButtonState.Pressed) {
+      void Drawing_MouseMove (object sender, MouseEventArgs draw) {
+         if (mIsDrawing && draw.LeftButton == MouseButtonState.Pressed) {
             Point currentPoint = draw.GetPosition (this);
-            mPoints.Add (currentPoint);
+            switch (mType) {
+               case 1 or 2: // Erase or scribble
+                  mScribble.AddPoints (currentPoint);
+                  break;
+               case 3: // Line
+                  mLine.EndPoint = currentPoint;
+                  break;
+               case 4: // Rectangle
+                  mRectangle.EndPoint = currentPoint;
+                  break;
+               case 5: // Ellipse
+                  mEllipse.EndPoint = currentPoint;
+                  break;
+            }
             InvalidateVisual ();
          }
       }
 
-      /// <summary>Resets the list after each scribble</summary>
-      void Reset () {
-         mPoints = new List<Point> ();
-         mDrawing.Add ((mPen.Brush, mPen.Thickness, mPoints));
-         mUndo.Push ((mPen.Brush, mPen.Thickness, mPoints));
-      }
-
-      /// <summary>To render the points on the display</summary>
-      /// <param name="drawingContext">Drawing context variable to draw to lines between each point</param>
+      /// <summary>To render the drawings on the display</summary>
+      /// <param name="drawingContext">Drawing context variable to render the drawing</param>
       protected override void OnRender (DrawingContext drawingContext) {
-         foreach (var (brush, thickness, points) in mDrawing) {
-            for (int i = 1; i < points.Count; i++)
-               drawingContext.DrawLine (new Pen (brush, thickness), points[i - 1], points[i]);
+         foreach (var shape in mShapes) {
+            shape.Draw (drawingContext);
          }
       }
       #endregion
 
       #region Private Data-------------------------------------------------------------------------------
-      Point mStartPoint; // Start point of the scribble
       Pen mPen; // Pen with brush colour and thickness
-      List<(Brush, double, List<Point>)> mDrawing = new (); // List to store all scribbles
-      List<Point> mPoints = new (); // List of scribbled points
-      Stack<(Brush, double, List<Point>)> mUndo = new (), mRedo = new (); // Stack to undo and redo scribbles
+      Stack<Shapes> mUndoRedo = new (); // Stack to undo and redo shapes
       bool mIsDrawing = false; // boolean variable to check if it is drawing
+      List<Shapes> mShapes = new (); // List of shapes
+      int mType = 2; // Indicate the type of shape (Erase Scribble - 1, Scribble - 2, Line - 3, Rectangle - 4, Ellipse - 5) default - scribble
+      Scribble mScribble;
+      Line mLine;
+      Rectangle mRectangle;
+      Ellipse mEllipse;
       #endregion
    }
 }
