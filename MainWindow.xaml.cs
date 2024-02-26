@@ -13,7 +13,7 @@ using Point = System.Windows.Point;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 
 
-namespace Scribble {
+namespace ScribblePad {
    /// <summary>
    /// Interaction logic for MainWindow.xaml
    /// </summary>

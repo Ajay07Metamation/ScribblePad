@@ -1,4 +1,4 @@
-﻿namespace Scribble;
+﻿namespace ScribblePad;
 
 using System;
 using System.Collections.Generic;
