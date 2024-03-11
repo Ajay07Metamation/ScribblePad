@@ -47,7 +47,7 @@
         <ToggleButton x:Name="mLineTool" Style="{StaticResource ButtonStyle}" Click="OnLine_Clicked" Margin="5,5" ToolTip="Line" >
             <Image Source="Icons/line.png"/>
         </ToggleButton>
-        <ToggleButton x:Name="mCLineTool" Style="{StaticResource ButtonStyle}" Click="OnCLine_Clicked" Margin="5,5" ToolTip="Line" >
+        <ToggleButton x:Name="mCLineTool" Style="{StaticResource ButtonStyle}" Click="OnCLine_Clicked" Margin="5,5" ToolTip="Connected Line (Esc to stop)" >
             <Image Source="Icons/CLines.png"/>
         </ToggleButton>
         <ToggleButton x:Name="mRectangleTool" Style="{StaticResource ButtonStyle}" Click="OnRectangle_Clicked" Margin="5,5" ToolTip="Rectangle">
