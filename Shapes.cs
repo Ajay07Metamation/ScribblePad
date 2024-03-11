@@ -13,118 +13,60 @@ using Point = System.Windows.Point;
 
 
 #region Shapes--------------------------------------------------------------------------------------
-public abstract class Shapes { // Abstract class for shapes
-   public int Type { // To indicate the type of shape
-      get => mType;
-      set => mType = value;
-   }
-
-   public Point StartPoint { // Get and set start point
-      get => mStartPoint;
-      set => mStartPoint = value;
-   }
-
-   public Point EndPoint { // Get and set end point
-      get => mEndPoint;
-      set => mEndPoint = value;
-   }
-
-   public Brush Brush { // Brush colour
-      get => mBrush;
-      set => mBrush = value;
-   }
-   public double Thickness { // Thickness 
-      get => mThickness;
-      set => mThickness = value;
-   }
+public abstract class Shape { // Abstract class for shapes
+   public int Type { get; set; } // To indicate the type of object
+   public bool IsSelected { get; set; }// To check if any shape is selected 
+   public Pen Pen { get; set; }
+   public virtual Point StartPoint { get; set; }// Get and set start point of line
+   public virtual Point EndPoint { get; set; }// Get and set end point of line
    public abstract void Draw (DrawingContext drawingContext); // To render the drawing
-   public abstract void SaveText (TextWriter tw); // Save as text
-   public abstract void SaveBinary (BinaryWriter bw); // Save as binary
-   public abstract Shapes LoadText (StreamReader sr); // Load as text
-   public abstract Shapes LoadBinary (BinaryReader br); // Load as binary
-
-   Brush mBrush;
-   double mThickness;
-   int mType;
-   Point mStartPoint;
-   Point mEndPoint;
+   public virtual void SaveBinary (BinaryWriter bw) {
+      bw.Write (StartPoint.X);
+      bw.Write (StartPoint.Y);
+      bw.Write (EndPoint.X);
+      bw.Write (EndPoint.Y);
+   }
+   public abstract Shape LoadBinary (BinaryReader br);// Load as binary
+   public Pen Highlighter => new (Brushes.Green, 1) { DashStyle = new DashStyle (new double[] { 2, 2 }, 0) };
 }
 #endregion
 
 #region Scribble--------------------------------------------------------------------------------------
-class Scribble : Shapes {
+class Scribble : Shape {
    public Scribble (Pen pen) {
       mPoints = new List<Point> ();
-      Brush = pen.Brush;
-      Thickness = pen.Thickness;
-      Type = 1;
+      (Type, Pen) = (1, pen);
    }
-   public List<Point> Points { // List of points of scribble
-      get => mPoints;
+
+   public override Point StartPoint {
+      set { base.StartPoint = value; AddPoints (base.StartPoint); }
    }
-   public void AddPoints (Point point) => mPoints.Add (point); // Add points to the list
+
+   public override Point EndPoint {
+      set { base.EndPoint = value; AddPoints (base.EndPoint); }
+   }
+   void AddPoints (Point point) => mPoints.Add (point); // Add points to the list
    List<Point> mPoints;
 
-   public override void Draw (DrawingContext drawingContext) { // Render the scribble
-      for (int i = 1; i < Points.Count; i++)
-         drawingContext.DrawLine (new Pen (Brush, Thickness), Points[i - 1], Points[i]);
-   }
-
-   public override void SaveText (TextWriter tw) { // Save the scribble as text
-      tw.WriteLine (Brush.ToString ()); // Brush color
-      tw.WriteLine (Thickness); // Brush thickness
-      tw.WriteLine (Points.Count); // Total number of points in one scribble
-      foreach (var point in Points) {
-         tw.WriteLine (point.X); // X coordinate of point
-         tw.WriteLine (point.Y); // Y coordinate of point
-      }
+   public override void Draw (DrawingContext dc) { // Render the scribble
+      for (int i = 1; i < mPoints.Count; i++)
+         dc.DrawLine (Pen, mPoints[i - 1], mPoints[i]);
    }
 
    public override void SaveBinary (BinaryWriter bw) { // Save the scribble as binary
-      if (Brush is SolidColorBrush sb) { // Brush color
-         bw.Write (sb.Color.A);
-         bw.Write (sb.Color.R);
-         bw.Write (sb.Color.G);
-         bw.Write (sb.Color.B);
-      }
-      bw.Write (Thickness); // Brush thickness
-      bw.Write (Points.Count); // Total number of points in one scribble
-      foreach (var point in Points) {
+      bw.Write (mPoints.Count); // Total number of points in one scribble
+      foreach (var point in mPoints) {
          bw.Write (point.X); // X coordinate of point
          bw.Write (point.Y); // Y coordinate of point
       }
    }
-   public override Shapes LoadText (StreamReader sr) { // Load the scribble from text file
-      Brush = new SolidColorBrush ((Color)ColorConverter.ConvertFromString (sr.ReadLine ())); // Brush color
-      double.TryParse (sr.ReadLine (), out double thickness); // Pen thickness
-      Thickness = thickness;
-      Scribble scribble = new (new Pen (Brush, Thickness));
-      int.TryParse (sr.ReadLine (), out int pCount); // Total number of points in one scribble
-      for (int j = 0; j < pCount; j++) {
-         double.TryParse (sr.ReadLine (), out double x); // X co-ordinate of point
-         double.TryParse (sr.ReadLine (), out double y); // Y co-ordinate of point
-         Point point = new (x, y);
-         scribble.AddPoints (point);
-      }
-      return scribble;
-   }
 
-   public override Shapes LoadBinary (BinaryReader br) { // Load the scribble from binary file
-      byte a = br.ReadByte ();
-      byte r = br.ReadByte ();
-      byte g = br.ReadByte ();
-      byte b = br.ReadByte ();
-      SolidColorBrush brush = new () {
-         Color = Color.FromArgb (a, r, g, b) // Brush color
-      };
-      Brush = brush;
-      Thickness = br.ReadDouble (); // Pen thickness
-      Scribble scribble = new (new Pen (Brush, Thickness));
+   public override Shape LoadBinary (BinaryReader br) { // Load the scribble from binary file
+      Scribble scribble = new (Pen);
       int pCount = br.ReadInt32 (); // Total number of points in one scribble
       for (int j = 0; j < pCount; j++) {
-         (var x, var y) = (br.ReadDouble (), br.ReadDouble ()); // X & Y co-ordinate of point
-         Point p = new (x, y);
-         scribble.AddPoints (p);
+         var (x, y) = (br.ReadDouble (), br.ReadDouble ()); // X & Y co-ordinate of point
+         scribble.AddPoints (new (x, y));
       }
       return scribble;
    }
@@ -132,146 +74,77 @@ class Scribble : Shapes {
 #endregion
 
 #region Line--------------------------------------------------------------------------------------
-class Line : Shapes {
+class Line : Shape {
    public Line (Pen pen) {
-      Brush = pen.Brush;
-      Thickness = pen.Thickness;
-      Type = 2;
+      mCLines = new List<Line> ();
+      (Type, Pen) = (2, pen);
    }
-   public override void Draw (DrawingContext drawingContext) { // Render the line
-      drawingContext.DrawLine (new Pen (Brush, Thickness), StartPoint, EndPoint);
+   public bool IsCLine {
+      get => mIsCLine;
+      set => mIsCLine = value;
    }
 
-   public override void SaveBinary (BinaryWriter bw) { // Save the line as binary
-      if (Brush is SolidColorBrush sb) { // Brush color
-         bw.Write (sb.Color.A);
-         bw.Write (sb.Color.R);
-         bw.Write (sb.Color.G);
-         bw.Write (sb.Color.B);
+   public List<Line> mCLines;
+   public override void Draw (DrawingContext dc) {
+      if (IsCLine) {
+         foreach (var line in mCLines) {
+            dc.DrawLine (Pen, line.StartPoint, line.EndPoint);
+            if (IsSelected) dc.DrawLine (Highlighter, line.StartPoint, line.EndPoint);
+         }
+      } else {
+         dc.DrawLine (Pen, StartPoint, EndPoint);
+         if (IsSelected) dc.DrawLine (Highlighter, StartPoint, EndPoint);
       }
-      bw.Write (Thickness); // Brush thickness
-      bw.Write (StartPoint.X);// Start point of line
-      bw.Write (StartPoint.Y);
-      bw.Write (EndPoint.X);// End point of line
-      bw.Write (EndPoint.Y);
+   }
+   public override void SaveBinary (BinaryWriter bw) {
+      bw.Write (IsCLine); // Boolean variable to check if it is connected line
+      if (IsCLine) {
+         bw.Write (mCLines.Count);
+         for (int i = 0; i < mCLines.Count; i++) {
+            var (start, end) = (mCLines[i].StartPoint, mCLines[i].EndPoint);
+            bw.Write (start.X);
+            bw.Write (start.Y);
+            bw.Write (end.X);
+            bw.Write (end.Y);
+         }
+      } else base.SaveBinary (bw);
+   }
+   public override Shape LoadBinary (BinaryReader br) { // Load the line from binary file
+      var isCLine = br.ReadBoolean ();
+      if (isCLine) {
+         Line cLine = new (Pen) { IsCLine = isCLine };
+         var count = br.ReadInt32 ();
+         for (int i = 0; i < count; i++) {
+            var (startX, startY, endX, endY) = (br.ReadDouble (), br.ReadDouble (), br.ReadDouble (), br.ReadDouble ());
+            Line line = new (Pen) { StartPoint = new (startX, startY), EndPoint = new (endX, endY) };
+            cLine.mCLines.Add (line);
+         }
+         return cLine;
+      } else {
+         var (startX, startY, endX, endY) = (br.ReadDouble (), br.ReadDouble (), br.ReadDouble (), br.ReadDouble ());
+         Line line = new (Pen) { StartPoint = new (startX, startY), EndPoint = new (endX, endY) };
+         return line;
+      }
    }
 
-   public override void SaveText (TextWriter tw) { // Save the line as text
-      tw.WriteLine (Brush.ToString ()); // Brush color
-      tw.WriteLine (Thickness); // Brush thickness
-      tw.WriteLine (StartPoint.X);// Start point of line
-      tw.WriteLine (StartPoint.Y);
-      tw.WriteLine (EndPoint.X);// End point of line
-      tw.WriteLine (EndPoint.Y);
-   }
-
-   public override Shapes LoadText (StreamReader sr) { // Load the line from text file
-      Brush = new SolidColorBrush ((Color)ColorConverter.ConvertFromString (sr.ReadLine ())); // Brush color
-      double.TryParse (sr.ReadLine (), out double thickness); // Pen thickness
-      Thickness = thickness;
-      double.TryParse (sr.ReadLine (), out double startX);
-      double.TryParse (sr.ReadLine (), out double startY);
-      StartPoint = new Point (startX, startY); // Start point of line
-      double.TryParse (sr.ReadLine (), out double endX);
-      double.TryParse (sr.ReadLine (), out double endY);
-      EndPoint = new Point (endX, endY); // End point of line
-      Line line = new (new Pen (Brush, Thickness)) {
-         StartPoint = StartPoint,
-         EndPoint = EndPoint
-      };
-      return line;
-   }
-
-   public override Shapes LoadBinary (BinaryReader br) { // Load the line from binary file
-      byte a = br.ReadByte ();
-      byte r = br.ReadByte ();
-      byte g = br.ReadByte ();
-      byte b = br.ReadByte ();
-      SolidColorBrush brush = new () {
-         Color = Color.FromArgb (a, r, g, b) // Brush color
-      };
-      Brush = brush;
-      Thickness = br.ReadDouble (); // Pen thickness
-      var (startX, startY, endX, endY) = (br.ReadDouble (), br.ReadDouble (), br.ReadDouble (), br.ReadDouble ());
-      StartPoint = new Point (startX, startY); // Start point of line
-      EndPoint = new Point (endX, endY); // End point of line
-      Line line = new (new Pen (Brush, Thickness)) {
-         StartPoint = StartPoint,
-         EndPoint = EndPoint
-      };
-      return line;
-   }
+   bool mIsCLine = false;
 }
 #endregion
 
 #region Rectangle--------------------------------------------------------------------------------------
-class Rectangle : Shapes {
-   public Rectangle (Pen pen) {
-      Brush = pen.Brush;
-      Thickness = pen.Thickness;
-      Type = 3;
-   }
-   public override void Draw (DrawingContext drawingContext) { // Render the rectangle
+class Rectangle : Shape {
+   public Rectangle (Pen pen) => (Type, Pen) = (3, pen);
+   public override void Draw (DrawingContext dc) { // Render the rectangle
       Rect rect = new (StartPoint, EndPoint);
-      drawingContext.DrawRectangle (null, new Pen (Brush, Thickness), rect);
-   }
-   public override void SaveText (TextWriter tw) { // Save the rectangle as text
-      tw.WriteLine (Brush.ToString ()); // Brush color
-      tw.WriteLine (Thickness); // Brush thickness
-      tw.WriteLine (StartPoint.X);// Start point of rectangle
-      tw.WriteLine (StartPoint.Y);
-      tw.WriteLine (EndPoint.X);// End point of rectangle
-      tw.WriteLine (EndPoint.Y);
-
+      dc.DrawRectangle (null, Pen, rect);
+      if (IsSelected) dc.DrawRectangle (null, Highlighter, rect);
    }
 
-   public override void SaveBinary (BinaryWriter bw) { // Save the rectangle as binary
-      if (Brush is SolidColorBrush sb) { // Brush color
-         bw.Write (sb.Color.A);
-         bw.Write (sb.Color.R);
-         bw.Write (sb.Color.G);
-         bw.Write (sb.Color.B);
-      }
-      bw.Write (Thickness); // Brush thickness
-      bw.Write (StartPoint.X);// Start point of rectangle
-      bw.Write (StartPoint.Y);
-      bw.Write (EndPoint.X);// End point of rectangle
-      bw.Write (EndPoint.Y);
-   }
-
-   public override Shapes LoadText (StreamReader sr) { // Load the rectangle from text file
-      Brush = new SolidColorBrush ((Color)ColorConverter.ConvertFromString (sr.ReadLine ())); // Brush color
-      double.TryParse (sr.ReadLine (), out double thickness); // Pen thickness
-      Thickness = thickness;
-      double.TryParse (sr.ReadLine (), out double startX);
-      double.TryParse (sr.ReadLine (), out double startY);
-      StartPoint = new Point (startX, startY);
-      double.TryParse (sr.ReadLine (), out double endX);
-      double.TryParse (sr.ReadLine (), out double endY);
-      EndPoint = new Point (endX, endY);
-      Rectangle rectangle = new (new Pen (Brush, Thickness)) {
-         StartPoint = StartPoint,
-         EndPoint = EndPoint,
-      };
-      return rectangle;
-   }
-
-   public override Shapes LoadBinary (BinaryReader br) { // Load the rectangle from binary file
-      byte a = br.ReadByte ();
-      byte r = br.ReadByte ();
-      byte g = br.ReadByte ();
-      byte b = br.ReadByte ();
-      SolidColorBrush brush = new () {
-         Color = Color.FromArgb (a, r, g, b) // Brush color
-      };
-      Brush = brush;
-      Thickness = br.ReadDouble (); // Pen thickness
+   public override Shape LoadBinary (BinaryReader br) { // Load the rectangle from binary file
       var (startX, startY, endX, endY) = (br.ReadDouble (), br.ReadDouble (), br.ReadDouble (), br.ReadDouble ());
-      StartPoint = new Point (startX, startY);
-      EndPoint = new Point (endX, endY);
-      Rectangle rectangle = new (new Pen (Brush, Thickness)) {
-         StartPoint = StartPoint,
-         EndPoint = EndPoint
+      Rectangle rectangle = new (Pen) {
+         StartPoint = new (startX, startY),
+         EndPoint = new (endX, endY)
       };
       return rectangle;
    }
@@ -279,75 +152,21 @@ class Rectangle : Shapes {
 #endregion
 
 #region Ellipse--------------------------------------------------------------------------------------
-class Ellipse : Shapes {
-   public Ellipse (Pen pen) {
-      Brush = pen.Brush;
-      Thickness = pen.Thickness;
-      Type = 4;
-   }
+class Ellipse : Shape {
+   public Ellipse (Pen pen) => (Type, Pen) = (4, pen);
    public override void Draw (DrawingContext dc) { // Render the ellipse
-      mRadiusX = Math.Abs (EndPoint.X - StartPoint.X) / 2;
-      mRadiusY = Math.Abs (EndPoint.Y - StartPoint.Y) / 2;
-      mCenter = new (StartPoint.X + mRadiusX, StartPoint.Y + mRadiusY);
+      mCenter = new (StartPoint.X, StartPoint.Y);
+      (mRadiusX, mRadiusY) = (Math.Abs (EndPoint.X - mCenter.X) / 2, Math.Abs (EndPoint.Y - mCenter.Y) / 2);
       mEllipse = new EllipseGeometry (mCenter, mRadiusX, mRadiusY);
-      dc.DrawGeometry (null, new Pen (Brush, Thickness), mEllipse);
-   }
-   public override void SaveText (TextWriter tw) { // Save the ellipse as text
-      tw.WriteLine (Brush.ToString ()); // Brush color
-      tw.WriteLine (Thickness); // Brush thickness
-      tw.WriteLine (StartPoint.X);// Start point of rectangle
-      tw.WriteLine (StartPoint.Y);
-      tw.WriteLine (EndPoint.X);// End point of rectangle
-      tw.WriteLine (EndPoint.Y);
+      dc.DrawGeometry (null, Pen, mEllipse);
+      if (IsSelected) dc.DrawGeometry (null, Highlighter, mEllipse);
    }
 
-   public override void SaveBinary (BinaryWriter bw) { // Save the ellipse as binary
-      if (Brush is SolidColorBrush sb) { // Brush color
-         bw.Write (sb.Color.A);
-         bw.Write (sb.Color.R);
-         bw.Write (sb.Color.G);
-         bw.Write (sb.Color.B);
-      }
-      bw.Write (Thickness); // Brush thickness
-      bw.Write (StartPoint.X);// Start point of rectangle
-      bw.Write (StartPoint.Y);
-      bw.Write (EndPoint.X);// End point of rectangle
-      bw.Write (EndPoint.Y);
-   }
-
-   public override Shapes LoadText (StreamReader sr) { // Load the ellipse from text file
-      Brush = new SolidColorBrush ((Color)ColorConverter.ConvertFromString (sr.ReadLine ())); // Brush color
-      double.TryParse (sr.ReadLine (), out double thickness); // Pen thickness
-      Thickness = thickness;
-      double.TryParse (sr.ReadLine (), out double startX);
-      double.TryParse (sr.ReadLine (), out double startY);
-      StartPoint = new Point (startX, startY);
-      double.TryParse (sr.ReadLine (), out double endX);
-      double.TryParse (sr.ReadLine (), out double endY);
-      EndPoint = new Point (endX, endY);
-      Ellipse ellipse = new (new Pen (Brush, Thickness)) {
-         StartPoint = StartPoint,
-         EndPoint = EndPoint,
-      };
-      return ellipse;
-   }
-
-   public override Shapes LoadBinary (BinaryReader br) { // Load the ellipse from binary file
-      byte a = br.ReadByte ();
-      byte r = br.ReadByte ();
-      byte g = br.ReadByte ();
-      byte b = br.ReadByte ();
-      SolidColorBrush brush = new () {
-         Color = Color.FromArgb (a, r, g, b) // Brush color
-      };
-      Brush = brush;
-      Thickness = br.ReadDouble (); // Pen thickness
+   public override Shape LoadBinary (BinaryReader br) { // Load the ellipse from binary file
       var (startX, startY, endX, endY) = (br.ReadDouble (), br.ReadDouble (), br.ReadDouble (), br.ReadDouble ());
-      StartPoint = new Point (startX, startY);
-      EndPoint = new Point (endX, endY);
-      Ellipse ellipse = new (new Pen (Brush, Thickness)) {
-         StartPoint = StartPoint,
-         EndPoint = EndPoint
+      Ellipse ellipse = new (Pen) {
+         StartPoint = new (startX, startY),
+         EndPoint = new (endX, endY)
       };
       return ellipse;
    }

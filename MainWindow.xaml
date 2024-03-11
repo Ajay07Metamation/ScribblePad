@@ -5,69 +5,76 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScribblePad"
         mc:Ignorable="d"
-        Title="SCRIBBLE PAD" Background="Transparent" Height="450" Width="800">
+        Title="SCRIBBLE PAD" Background="Transparent" Height="450" Width="800" Closing="Window_Closed" Loaded="Window_Loaded">
     <Window.Resources>
-        <Style x:Key="ButtonStyle" TargetType="Button">
+        <Style x:Key="ButtonStyle" TargetType="ToggleButton">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width" Value="40"/>
-            <Setter Property="ToolTip" Value="{Binding Name, RelativeSource={RelativeSource Self}}"/>
+            <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.2"/>
+                </Trigger>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="Aqua"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid Height="60" VerticalAlignment="Top" Background="Black">
-            <Menu Background="White">
-                <MenuItem Header="_File">
-                    <MenuItem Header="_Open" Click="Open_Click"/>
-                    <MenuItem Header="_Save" Click="Save_Click"/>
-                </MenuItem>
-            </Menu>
-            <ToolBarTray Grid.Row="0" VerticalAlignment="Bottom" DockPanel.Dock="Top" HorizontalAlignment="Center">
-                <ToolBar  Height="40" Width="800">
-                    <Button x:Name="Pen" Style="{StaticResource ButtonStyle}" Click="Pen_Click" Margin="10,5">
-                        <Image Source="Icons/pen.png"/>
-                    </Button>
-                    <Button x:Name="Line" Style="{StaticResource ButtonStyle}" Click="Line_Click" Margin="5,5">
-                        <Image Source="Icons/line.png"/>
-                    </Button>
-                    <Button x:Name="Rectangle" Style="{StaticResource ButtonStyle}" Click="Rectangle_Click" Margin="5,5">
-                        <Image Source="Icons/rectangle.png"/>
-                    </Button>
-                    <Button x:Name="Ellipse" Style="{StaticResource ButtonStyle}" Click="Ellipse_Click" Margin="10,5">
-                        <Image Source="Icons/ellipse.png"/>
-                    </Button>
-                    <Button x:Name="PenColor" Style="{StaticResource ButtonStyle}" Click="PenColor_Click" Margin="10,5">
-                        <Image Source="Icons/paint-bucket.png"/>
-                    </Button>
-                    <Button x:Name="Eraser" Style="{StaticResource ButtonStyle}" Click="Eraser_Click" Margin="5,5">
-                        <Image Source="Icons/eraser.png"/>
-                    </Button>
-                    <Button x:Name="Undo" Style="{StaticResource ButtonStyle}" Click="Undo_Click" Margin="5,5">
-                        <Image Source="Icons/undo.png"/>
-                    </Button>
-                    <Button x:Name="Redo" Style="{StaticResource ButtonStyle}" Click="Redo_Click" Margin="5,5">
-                        <Image Source="Icons/redo.png"/>
-                    </Button>
-                    <Button x:Name="Clear" Style="{StaticResource ButtonStyle}" Click="Clear_Click" Margin="5,5">
-                        <Image Source="Icons/clear.png"/>
-                    </Button>
-                    <Image Source="Icons/width.png" Width="45" Height="30"/>
-                    <Slider x:Name="ThicknessSlider" VerticalAlignment="Center" Width="200" Height="21" 
-                                Minimum="1" Maximum="10" TickFrequency="1" Value="3" ValueChanged="ThicknessSlider_ValueChanged" 
-                                IsSnapToTickEnabled="True" TickPlacement="BottomRight">
-                        <Slider.ToolTip>
-                            <ToolTip>Thickness</ToolTip>
-                        </Slider.ToolTip>
-                    </Slider>
-                    <TextBlock Text="{Binding ElementName=ThicknessSlider, Path=Value}" VerticalAlignment="Center" Width="40" Height="21" Margin="5"/>
-                </ToolBar>
-            </ToolBarTray>
-        </Grid>
-        <Canvas Grid.Row="1" Background="Transparent" MouseDown="Drawing_MouseDown" MouseUp="Drawing_MouseUp" 
-                MouseMove="Drawing_MouseMove"/>
+    <Menu Grid.Row="0" Background="White">
+        <MenuItem Header="_File">
+            <MenuItem Header="_New" Click="New_Click"/>
+            <MenuItem Header="_Open..." Click="Open_Click"/>
+            <MenuItem Header="_Save" Click="Save_Click"/>
+            <MenuItem Header="_SaveAs..." Click="SaveAs_Click"/>
+            <MenuItem Header="_Exit" Click="Exit_Click"/>
+        </MenuItem>
+    </Menu>
+    <WrapPanel x:Name="mPanel" Grid.Row="1" DockPanel.Dock="Top" Height="40" Background="AliceBlue">
+        <ToggleButton x:Name="mPickTool" Style="{StaticResource ButtonStyle}" Click="OnPick_Click" Margin="10,5" ToolTip="Pick">
+            <Image Source="Icons/cursor.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mScribbleTool" Style="{StaticResource ButtonStyle}" Click="OnPen_Clicked" Margin="10,5" ToolTip="Scribble">
+            <Image Source="Icons/pen.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mLineTool" Style="{StaticResource ButtonStyle}" Click="OnLine_Clicked" Margin="5,5" ToolTip="Line" >
+            <Image Source="Icons/line.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mCLineTool" Style="{StaticResource ButtonStyle}" Click="OnCLine_Clicked" Margin="5,5" ToolTip="Line" >
+            <Image Source="Icons/CLines.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mRectangleTool" Style="{StaticResource ButtonStyle}" Click="OnRectangle_Clicked" Margin="5,5" ToolTip="Rectangle">
+            <Image Source="Icons/rectangle.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mEllipseTool" Style="{StaticResource ButtonStyle}" Click="OnEllipse_Clicked" Margin="10,5" ToolTip="Ellipse">
+            <Image Source="Icons/ellipse.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mEraser" Style="{StaticResource ButtonStyle}" Click="OnEraser_Clicked" Margin="5,5" ToolTip="Eraser" >
+            <Image Source="Icons/eraser.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mUndo" Style="{StaticResource ButtonStyle}" Click="OnUndo_Clicked" Margin="5,5" ToolTip="Undo">
+            <Image Source="Icons/undo.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mRedo" Style="{StaticResource ButtonStyle}" Click="OnRedo_Clicked" Margin="5,5" ToolTip="Redo">
+            <Image Source="Icons/redo.png"/>
+        </ToggleButton>
+        <ToggleButton x:Name="mClear" Style="{StaticResource ButtonStyle}" Click="OnClear_Clicked" Margin="5,5" ToolTip="Clear">
+            <Image Source="Icons/clear.png"/>
+        </ToggleButton>
+        <TextBlock Text="Thickness : " Margin="5,10"/>
+        <ComboBox x:Name="mThickness" VerticalAlignment="Center" Width="50" Margin="5"
+                              SelectionChanged="OnThickness_SelectionChanged"/>
+        <ToggleButton x:Name="mColourChange" Style="{StaticResource ButtonStyle}" Click="OnColourChange_Clicked" Margin="10,5" ToolTip="Color">
+            <Image Source="Icons/paint-bucket.png"/>
+        </ToggleButton>
+    </WrapPanel>
+    <Canvas x:Name="mDisplay" Grid.Row="2" Background="Transparent" MouseDown="Drawing_MouseDown" MouseMove="Drawing_MouseMove" PreviewKeyDown="mDisplay_PreviewKeyDown"/>
     </Grid>
 </Window>
