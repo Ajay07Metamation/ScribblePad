@@ -5,9 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScribblePad"
         mc:Ignorable="d"
-        Title="SCRIBBLE PAD" Background="Transparent" Height="450" Width="800" Closing="Window_Closed" Loaded="Window_Loaded">
+         Title="MainWindow" Background="Transparent" Height="450" Width="800" Closing="Window_Closing">
+    <Window.CommandBindings>
+        <CommandBinding Command="local:MainWindow.Undo" CanExecute="CanExecute_Undo"/>
+        <CommandBinding Command="local:MainWindow.Redo" CanExecute="CanExecute_Redo"/>
+    </Window.CommandBindings>
     <Window.Resources>
         <Style x:Key="ButtonStyle" TargetType="ToggleButton">
+            <EventSetter Event="Click" Handler="ToggleButton_Click"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width" Value="40"/>
@@ -20,6 +25,7 @@
                     <Setter Property="Background" Value="Aqua"/>
                 </Trigger>
             </Style.Triggers>
+
         </Style>
     </Window.Resources>
     <Grid>
@@ -28,53 +34,43 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-    <Menu Grid.Row="0" Background="White">
-        <MenuItem Header="_File">
-            <MenuItem Header="_New" Click="New_Click"/>
-            <MenuItem Header="_Open..." Click="Open_Click"/>
-            <MenuItem Header="_Save" Click="Save_Click"/>
-            <MenuItem Header="_SaveAs..." Click="SaveAs_Click"/>
-            <MenuItem Header="_Exit" Click="Exit_Click"/>
-        </MenuItem>
-    </Menu>
-    <WrapPanel x:Name="mPanel" Grid.Row="1" DockPanel.Dock="Top" Height="40" Background="AliceBlue">
-        <ToggleButton x:Name="mPickTool" Style="{StaticResource ButtonStyle}" Click="OnPick_Click" Margin="10,5" ToolTip="Pick">
-            <Image Source="Icons/cursor.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mScribbleTool" Style="{StaticResource ButtonStyle}" Click="OnPen_Clicked" Margin="10,5" ToolTip="Scribble">
-            <Image Source="Icons/pen.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mLineTool" Style="{StaticResource ButtonStyle}" Click="OnLine_Clicked" Margin="5,5" ToolTip="Line" >
-            <Image Source="Icons/line.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mCLineTool" Style="{StaticResource ButtonStyle}" Click="OnCLine_Clicked" Margin="5,5" ToolTip="Connected Line (Esc to stop)" >
-            <Image Source="Icons/CLines.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mRectangleTool" Style="{StaticResource ButtonStyle}" Click="OnRectangle_Clicked" Margin="5,5" ToolTip="Rectangle">
-            <Image Source="Icons/rectangle.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mEllipseTool" Style="{StaticResource ButtonStyle}" Click="OnEllipse_Clicked" Margin="10,5" ToolTip="Ellipse">
-            <Image Source="Icons/ellipse.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mEraser" Style="{StaticResource ButtonStyle}" Click="OnEraser_Clicked" Margin="5,5" ToolTip="Eraser" >
-            <Image Source="Icons/eraser.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mUndo" Style="{StaticResource ButtonStyle}" Click="OnUndo_Clicked" Margin="5,5" ToolTip="Undo">
-            <Image Source="Icons/undo.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mRedo" Style="{StaticResource ButtonStyle}" Click="OnRedo_Clicked" Margin="5,5" ToolTip="Redo">
-            <Image Source="Icons/redo.png"/>
-        </ToggleButton>
-        <ToggleButton x:Name="mClear" Style="{StaticResource ButtonStyle}" Click="OnClear_Clicked" Margin="5,5" ToolTip="Clear">
-            <Image Source="Icons/clear.png"/>
-        </ToggleButton>
-        <TextBlock Text="Thickness : " Margin="5,10"/>
-        <ComboBox x:Name="mThickness" VerticalAlignment="Center" Width="50" Margin="5"
-                              SelectionChanged="OnThickness_SelectionChanged"/>
-        <ToggleButton x:Name="mColourChange" Style="{StaticResource ButtonStyle}" Click="OnColourChange_Clicked" Margin="10,5" ToolTip="Color">
-            <Image Source="Icons/paint-bucket.png"/>
-        </ToggleButton>
-    </WrapPanel>
-    <Canvas x:Name="mDisplay" Grid.Row="2" Background="Transparent" MouseDown="Drawing_MouseDown" MouseMove="Drawing_MouseMove" PreviewKeyDown="mDisplay_PreviewKeyDown"/>
+        <Menu Grid.Row="0" Background="White">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" InputGestureText="Ctrl+N" Click="OnNew_Click"/>
+                <MenuItem Header="_Open..." InputGestureText="Ctrl+O" Click="OnOpen_Click"/>
+                <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="OnSave_Click"/>
+                <MenuItem Header="_SaveAs..." Click="OnSaveAs_Click"/>
+                <MenuItem Header="_Exit"  Click="OnExit_Click"/>
+            </MenuItem>
+        </Menu>
+        <WrapPanel x:Name="mPanel" Grid.Row="1" DockPanel.Dock="Top" Height="40" Background="AliceBlue">
+            <ToggleButton x:Name="mScribbleTool" Style="{StaticResource ButtonStyle}" Tag="1" Click="OnShape_Click" Margin="10,5" ToolTip="Scribble">
+                <Image Source="Icons/scribble.png"/>
+            </ToggleButton>
+            <ToggleButton x:Name="mLineTool" Style="{StaticResource ButtonStyle}" Tag="2" Click="OnShape_Click" Margin="5,5" ToolTip="Line">
+                <Image Source="Icons/line.png"/>
+            </ToggleButton>
+            <ToggleButton x:Name="mRectangleTool" Style="{StaticResource ButtonStyle}" Tag="3" Click="OnShape_Click" Margin="5,5" ToolTip="Rectangle">
+                <Image Source="Icons/rectangle.png"/>
+            </ToggleButton>
+            <ToggleButton x:Name="mCircleTool" Style="{StaticResource ButtonStyle}" Tag="4" Click="OnShape_Click" Margin="10,5" ToolTip="Circle">
+                <Image Source="Icons/circle.png"/>
+            </ToggleButton>
+            <ToggleButton x:Name="mUndo" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Undo}"
+                          Click="OnUndo_Click" Margin="5,5" ToolTip="Undo (Ctrl+Z)">
+                <Image Source="Icons/undo.png"/>
+            </ToggleButton>
+            <ToggleButton x:Name="mRedo" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Redo}"
+                          Click="OnRedo_Click" Margin="5,5" ToolTip="Redo (Ctrl+Y)">
+                <Image Source="Icons/redo.png"/>
+            </ToggleButton>
+            <ToggleButton x:Name="mClear" Style="{StaticResource ButtonStyle}" Click="OnClear_Click" Margin="5,5" ToolTip="Clear">
+                <Image Source="Icons/clear.png"/>
+            </ToggleButton>
+            <ToggleButton x:Name="mColourChange" Style="{StaticResource ButtonStyle}" Click="OnColourChange_Click" Margin="10,5" ToolTip="Color">
+                <Image Source="Icons/color.png"/>
+            </ToggleButton>
+        </WrapPanel>
+        <Canvas x:Name="mDisplay" Grid.Row="2" Background="Transparent" MouseDown="OnDisplay_MouseDown" MouseMove="OnDisplay_MouseMove" PreviewKeyDown="OnDisplay_PreviewKeyDown"/>
     </Grid>
 </Window>
