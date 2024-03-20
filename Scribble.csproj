@@ -9,10 +9,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Backend\**" />
+    <Compile Remove="ClassLibrary1\**" />
     <Compile Remove="data\**" />
+    <Compile Remove="Shape\**" />
+    <EmbeddedResource Remove="Backend\**" />
+    <EmbeddedResource Remove="ClassLibrary1\**" />
     <EmbeddedResource Remove="data\**" />
+    <EmbeddedResource Remove="Shape\**" />
+    <None Remove="Backend\**" />
+    <None Remove="ClassLibrary1\**" />
     <None Remove="data\**" />
+    <None Remove="Shape\**" />
+    <Page Remove="Backend\**" />
+    <Page Remove="ClassLibrary1\**" />
     <Page Remove="data\**" />
+    <Page Remove="Shape\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shapes\Shapes.csproj" />
+    <ProjectReference Include="Shape\Shape.csproj" />
   </ItemGroup>
 
   <ItemGroup>
