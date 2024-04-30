@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scribble", "Scribble.csproj", "{F919B318-F999-4597-A067-68C370F1BAF8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesignCraft", "DesignCraft.csproj", "{F919B318-F999-4597-A067-68C370F1BAF8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shape", "Shape\Shape.csproj", "{02C555A9-CE3C-48A8-AE72-8BBF13661819}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesignCraft.Lib", "ClassLibrary1\DesignCraft.Lib.csproj", "{71D9784F-4308-4450-9CD3-F24A8CC4D310}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{F919B318-F999-4597-A067-68C370F1BAF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F919B318-F999-4597-A067-68C370F1BAF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F919B318-F999-4597-A067-68C370F1BAF8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{02C555A9-CE3C-48A8-AE72-8BBF13661819}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{02C555A9-CE3C-48A8-AE72-8BBF13661819}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{02C555A9-CE3C-48A8-AE72-8BBF13661819}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{02C555A9-CE3C-48A8-AE72-8BBF13661819}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71D9784F-4308-4450-9CD3-F24A8CC4D310}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71D9784F-4308-4450-9CD3-F24A8CC4D310}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71D9784F-4308-4450-9CD3-F24A8CC4D310}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71D9784F-4308-4450-9CD3-F24A8CC4D310}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
