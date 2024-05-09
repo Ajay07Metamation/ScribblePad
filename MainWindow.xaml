@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:DesignCraft"
-        Height="450" Width="800" WindowState="Maximized" Closing="Window_Closing">
+                Height="450" Width="800" WindowState="Maximized">
     <Window.CommandBindings>
         <CommandBinding Command="local:MainWindow.Undo" CanExecute="CanExecute_Undo"/>
         <CommandBinding Command="local:MainWindow.Redo" CanExecute="CanExecute_Redo"/>
@@ -37,27 +37,27 @@
         <StackPanel DockPanel.Dock="Top">
             <Menu Background="White">
                 <MenuItem Header="_File">
-                    <MenuItem Header="_New" InputGestureText="Ctrl+N" Click="OnNew_Click" />
+                    <MenuItem Header="_New" InputGestureText="Ctrl+N" />
                     <MenuItem Header="_Open..." InputGestureText="Ctrl+O" Click="OnOpen_Click"/>
                     <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="OnSave_Click" Command="{x:Static local:MainWindow.Save}"/>
-                    <MenuItem Header="_SaveAs..." Click="OnSaveAs_Click" Command="{x:Static local:MainWindow.Save}"/>
-                    <MenuItem Header="_Exit"  Click="OnExit_Click"/>
+                    <MenuItem Header="_SaveAs..." Command="{x:Static local:MainWindow.Save}"/>
+                    <MenuItem Header="_Exit"/>
                 </MenuItem>
                 <MenuItem Header="Edit"/>
                 <MenuItem Header="Tools"/>
                 <MenuItem Header="Help"/>
             </Menu>
             <StackPanel Height="30" Background="#F5F5F5" Orientation="Horizontal">
-                <Button x:Name="mNew" Style="{StaticResource ButtonStyle}" Click="OnNew_Click" Margin="5,5" ToolTip="New File">
+                <Button x:Name="mNew" Style="{StaticResource ButtonStyle}" Margin="5,5" ToolTip="New File">
                     <Image Source="Icons/new.png"/>
                 </Button>
-                <Button x:Name="mOpen" Style="{StaticResource ButtonStyle}" Click="OnOpen_Click" Margin="5,5" ToolTip="Open File">
+                <Button x:Name="mOpen" Style="{StaticResource ButtonStyle}" Margin="5,5" ToolTip="Open File" Click="OnOpen_Click">
                     <Image Source="Icons/open.png"/>
                 </Button>
-                <Button x:Name="mSave" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Save}" Click="OnSave_Click" Margin="5,5" ToolTip="Save File">
+                <Button x:Name="mSave" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Save}" Margin="5,5" ToolTip="Save File" Click="OnSave_Click">
                     <Image Source="Icons/save.png"/>
                 </Button>
-                <Button x:Name="mSaveAs" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Save}" Click="OnSaveAs_Click" Margin="10,5" ToolTip="Save As">
+                <Button x:Name="mSaveAs" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Save}" Margin="10,5" ToolTip="Save As" Click="OnSave_Click">
                     <Image Source="Icons/saveas.png"/>
                 </Button>
                 <Button x:Name="mUndo" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Undo}" Click="OnUndo_Click" Margin="5,5" ToolTip="Undo">
@@ -66,32 +66,25 @@
                 <Button x:Name="mRedo" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Redo}" Click="OnRedo_Click" Margin="5,5" ToolTip="Redo">
                     <Image Source="Icons/redo.png"/>
                 </Button>
-                <Button x:Name="mClearTool" Style="{StaticResource ButtonStyle}" Click="OnClear_Click" Margin="5,5" ToolTip="Clear All">
+                <Button x:Name="mClearTool" Style="{StaticResource ButtonStyle}" Margin="5,5" ToolTip="Clear All" Click="OnClear_Click">
                     <Image Source="Icons/clear.png"/>
-                </Button>
-                <Button x:Name="mColorChange" Style="{StaticResource ButtonStyle}" Click="OnColourChange_Click" Margin="10,5" ToolTip="Color Change">
-                    <Image Source="Icons/color.png"/>
                 </Button>
             </StackPanel>
         </StackPanel>
         <Separator DockPanel.Dock="Top"/>
         <WrapPanel x:Name="mPanel" DockPanel.Dock="Left" Background="#F5F5F5" Margin="0,0,-1,0">
-            <ToggleButton x:Name="mCLineTool" Style="{StaticResource TButtonStyle}" Tag="1" Click="OnShape_Click" Margin="5,5" ToolTip="Connected Line">
-                <Image Source="Icons/cline.png"/>
-            </ToggleButton>
-            <ToggleButton x:Name="mLineTool" Style="{StaticResource TButtonStyle}" Tag="2" Click="OnShape_Click" Margin="5,5" ToolTip="Line">
+            <ToggleButton x:Name="mLineTool" Style="{StaticResource TButtonStyle}" Tag="1" Click="OnShape_Click" Margin="5,5" ToolTip="Line">
                 <Image Source="Icons/line.png"/>
             </ToggleButton>
-            <ToggleButton x:Name="mRectangleTool" Style="{StaticResource TButtonStyle}" Tag="3" Click="OnShape_Click" Margin="5,5" ToolTip="Rectangle">
+            <ToggleButton x:Name="mRectangleTool" Style="{StaticResource TButtonStyle}" Tag="2" Click="OnShape_Click" Margin="5,5" ToolTip="Rectangle">
                 <Image Source="Icons/rectangle.png"/>
             </ToggleButton>
-            <ToggleButton x:Name="mCircleTool" Style="{StaticResource TButtonStyle}" Tag="4" Click="OnShape_Click" Margin="10,5" ToolTip="Circle">
-                <Image Source="Icons/circle.png"/>
-            </ToggleButton>
         </WrapPanel>
-        <StackPanel x:Name="mInputBar" Height="30" Background="#F5F5F5" Orientation="Horizontal" DockPanel.Dock="Top"/>
+        <TextBlock x:Name="mPrompt" Height="25" Background="White" DockPanel.Dock="Top" Margin="10,0,0,0" Text="Select a tool to start designing"/>
+        <StackPanel  x:Name="mInputBar" Height="30" Background="#F5F5F5" Orientation="Horizontal" DockPanel.Dock="Top"/>
         <Border BorderBrush="DimGray" BorderThickness="1">
-            <local:Paint x:Name="mDisplay" DockPanel.Dock="Bottom" Background="White" ClipToBounds="True"/>
+            <local:Paint x:Name="mDwgSurface" DockPanel.Dock="Bottom" Background="White" ClipToBounds="True"/>
         </Border>
     </DockPanel>
 </Window>
+

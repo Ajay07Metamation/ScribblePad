@@ -1,54 +1,51 @@
-﻿using System.Collections.Generic;
+﻿using DesignLib;
+using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using System.Windows.Input;
-using Shape = DesignLib.Shape;
 
 namespace DesignCraft;
-class DrawingEditor {
+public class DrawingEditor {
+
    #region Constructor------------------------------------------------------------------------------------
-   public DrawingEditor (List<Shape> entityList) { mEntityCollection = entityList; }
+   public DrawingEditor () { }
    #endregion
 
    #region Implementation---------------------------------------------------------------------------------
    public void Undo () {
-      if (mEntityCollection.Count != 0) {
-         int last = mEntityCollection.Count - 1;
-         mUndoRedo.Push (mEntityCollection[last]);
-         mEntityCollection.RemoveAt (last);
+      if (Drawing.Count != 0) {
+         int last = Drawing.Count - 1;
+         mUndoRedo.Push (Drawing.Plines[last]);
+         Drawing.Plines.RemoveAt (last);
       }
+      Drawing.RedrawReq ();
    }
 
    /// <summary>Redo the last undone shape</summary>
    public void Redo () {
       if (mUndoRedo.Count != 0) {
-         var shape = mUndoRedo.Pop ();
-         mEntityCollection.Add (shape);
+         var pLine = mUndoRedo.Pop ();
+         Drawing.AddPline (pLine);
       }
+      Drawing.RedrawReq ();
    }
 
    // Determine whether undo or redo can be executed
    public void CanRedo (object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = mUndoRedo.Any ();
-   public void CanUndo (object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = mEntityCollection.Any ();
+   public void CanUndo (object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = Drawing.Plines.Any ();
 
    /// <summary>Clear the display</summary>
    public void Clear () {
-      if (mEntityCollection.Count != 0) { mEntityCollection.Clear (); mUndoRedo.Clear (); }
-   }
-   /// <summary>Changes the colour of the current shape</summary>
-   public void ColorChange () {
-      var colour = new ColorDialog ();
-      if (CurShape != null && colour.ShowDialog () == DialogResult.OK)
-         CurShape.Brush = (colour.Color.A, colour.Color.R, colour.Color.G, colour.Color.B);
+      if (Drawing.Count != 0) { Drawing.Clear (); mUndoRedo.Clear (); Drawing.RedrawReq (); }
    }
    #endregion
 
    #region Properties-------------------------------------------------------------------------------------
-   public Shape CurShape { get => mEntityCollection.Count > 0 ? mEntityCollection.Last () : null; }
+   public Drawing Drawing { get => mDrawing; set => mDrawing = value; }
    #endregion
 
    #region Private Field----------------------------------------------------------------------------------
-   Stack<Shape> mUndoRedo = new (); // Stack for redo and undo operation
-   List<Shape> mEntityCollection;
+   Stack<Pline> mUndoRedo = new (); // Stack for redo and undo operation
+   Drawing mDrawing = new ();
    #endregion
 }
+

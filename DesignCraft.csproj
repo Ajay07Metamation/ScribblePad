@@ -29,10 +29,7 @@
 
   <ItemGroup>
     <None Remove=".gitignore" />
-    <None Remove="Icons\circle.png" />
     <None Remove="Icons\clear.png" />
-    <None Remove="Icons\cline.png" />
-    <None Remove="Icons\color.png" />
     <None Remove="Icons\line.png" />
     <None Remove="Icons\new.png" />
     <None Remove="Icons\open.png" />
@@ -45,17 +42,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Icons\cline.png" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="ClassLibrary1\DesignCraft.Lib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Icons\circle.png" />
     <Resource Include="Icons\clear.png" />
-    <Resource Include="Icons\color.png" />
     <Resource Include="Icons\line.png" />
     <Resource Include="Icons\new.png" />
     <Resource Include="Icons\open.png" />

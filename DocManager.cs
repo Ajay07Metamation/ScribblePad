@@ -1,125 +1,79 @@
 ﻿using DesignLib;
-using Microsoft.Win32;
 using System.Collections.Generic;
 using System.IO;
-using System.Windows;
+using System.Linq;
 using System.Windows.Forms;
-using System.Windows.Input;
-using Line = DesignLib.Line;
 using OpenFileDialog = System.Windows.Forms.OpenFileDialog;
-using Rectangle = DesignLib.Rectangle;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
-using Shape = DesignLib.Shape;
 
 namespace DesignCraft;
-class DocManager {
-   #region Constructor --------------------------------------------------------------------------------------
-   public DocManager (List<Shape> entityList) { mEntityCollection = entityList; mDrawing = new (entityList); }
-   #endregion
 
-   #region Implementation------------------------------------------------------------------------------------
-   #region Save & Load----------------------------------------------------------------------------------------
-   /// <summary>Save the drawing</summary>
+public class DocManager {
+
+   #region Implementation ------------------------------------------------------------------------
    public void Save () {
       if (!IsSaved) {
-         SaveFileDialog save = new () {
-            FileName = "Untitled.bin",
-            Filter = "Binary files (*.bin)|*.bin"
-         };
+         SaveFileDialog save = new () { FileName = "Untitled", Filter = "Binary files (*.bin)|*.bin" };
          if (save.ShowDialog () == DialogResult.OK) Save (save.FileName);
-         (IsSaved, mCurrentFilePath) = (true, save.FileName);
-      } else Save (mCurrentFilePath);
+         (IsSaved, SavedFileName) = (true, save.FileName);
+      } else Save (SavedFileName);
    }
    void Save (string path) {
-      if (mEntityCollection.Count > 0)
+      if (Drawing.Count > 0)
          using (BinaryWriter bw = new (File.Open (path, FileMode.Create))) {
-            bw.Write (mEntityCollection.Count);
-            foreach (var shape in mEntityCollection) {
-               bw.Write (shape.Type);
-               bw.Write (shape.Brush.Item1); bw.Write (shape.Brush.Item2); bw.Write (shape.Brush.Item3); bw.Write (shape.Brush.Item4);
-               shape.Save (bw);
+            bw.Write (Drawing.Count);
+            foreach (var pLine in Drawing.Plines) {
+               var points = pLine.GetPoints ();
+               bw.Write (points.Count ());
+               foreach (var point in points) {
+                  bw.Write (point.X);
+                  bw.Write (point.Y);
+               }
             }
          }
    }
 
    /// <summary>Load the drawing</summary>
    public void Load () {
-      OpenFileDialog load = new () {
-         FileName = "Untitled.bin",
-         Filter = "Binary files (*.bin)|*.bin"
-      };
+      OpenFileDialog load = new () { FileName = "Untitled.bin", Filter = "Binary files (*.bin)|*.bin" };
       if (load.ShowDialog () == DialogResult.OK) {
          string path = load.FileName;
          if (path != null) {
             Load (path);
-            (IsSaved, mCurrentFilePath) = (true, path);
+            (IsSaved, SavedFileName) = (true, path);
          }
       }
    }
-   void Clear () {
-      if (mEntityCollection.Count != 0) mEntityCollection.Clear ();
+   public void Clear () {
+      if (mDrawing.Count != 0) mDrawing.Clear ();
    }
    void Load (string filePath) {
       Clear ();
       using (BinaryReader reader = new (File.Open (filePath, FileMode.Open))) {
-         Shape shape = null;
-         var sCount = reader.ReadInt32 (); // Total drawing count
-         for (int i = 0; i < sCount; i++) {
-            var type = reader.ReadInt32 ();
-            switch (type) {
-               case 1: shape = new CLine (); break;
-               case 2: shape = new Line (); break;
-               case 3: shape = new Rectangle (); break;
-               case 4: shape = new Circle (); break;
+         var pLineCount = reader.ReadInt32 (); // Total drawing count
+         for (int i = 0; i < pLineCount; i++) {
+            var pCount = reader.ReadInt32 ();
+            List<Point> points = new ();
+            for (int j = 0; j < pCount; j++) {
+               var (x, y) = (reader.ReadDouble (), reader.ReadDouble ());
+               points.Add (PointConverter.ToCustomPoint (x, y));
             }
-            mEntityCollection.Add (shape.Load (reader));
+            Drawing.AddPline (new Pline (points));
          }
+         Drawing.RedrawReq ();
       }
-   }
-
-   // Save and clear the display
-   void SaveAndClear () { Save (); Clear (); }
-   #endregion
-
-   /// <summary>Keyboard shortcuts for commands</summary>
-   /// <param name="sender"></param>
-   /// <param name="e"></param>
-   public void Shortcuts (object sender, System.Windows.Input.KeyEventArgs e) {
-      if (Keyboard.Modifiers == ModifierKeys.Control)
-         switch (e.Key) {
-            case Key.N: CheckAndPrompt (); mCurrentFilePath = ""; break;
-            case Key.S: Save (); break;
-            case Key.O: Load (); break;
-         } else if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key == Key.F4) {
-         Window window = new ();
-         window.Close ();
-      }
-   }
-
-   /// <summary>Provides user prompt</summary>
-   /// Provides user prompt to save changes made to the drawing
-   /// <returns></returns>
-   public bool CheckAndPrompt () {
-      bool isCanceled = false;
-      MessageBoxResult messageBox = System.Windows.MessageBox.Show ("Do you want to save your changes?", "Scribble Pad",
-                                                     MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
-      switch (messageBox) {
-         case MessageBoxResult.Yes: SaveAndClear (); break;
-         case MessageBoxResult.No: Clear (); break;
-         case MessageBoxResult.Cancel: isCanceled = true; break;
-      }
-      return isCanceled;
    }
    #endregion
 
-   #region Properties----------------------------------------------------------------------------------------
-   public bool IsSaved { get; set; } // Indicate if the drawing is saved
-   public string TitleName => mCurrentFilePath;
+   #region Properties ----------------------------------------------------------------------------
+   public string SavedFileName { get => mSavedFileName; set => mSavedFileName = value; }
+   public bool IsSaved { get => mIsSaved; set => mIsSaved = value; }
+   public Drawing Drawing { get => mDrawing; set => mDrawing = value; }
    #endregion
 
-   #region Private Fields------------------------------------------------------------------------------------
-   DrawingEditor mDrawing;
-   string mCurrentFilePath = "Untitled.bin"; // Current file path where the drawing is saved
-   List<Shape> mEntityCollection;
+   #region Private field -------------------------------------------------------------------------
+   Drawing mDrawing = new ();
+   bool mIsSaved = false;
+   string mSavedFileName = string.Empty;
    #endregion
 }
