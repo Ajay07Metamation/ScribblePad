@@ -1,6 +1,7 @@
-﻿namespace DesignLib;
+﻿namespace DesignCraft.Lib;
 
 public class Pline {
+
    #region Constructors ------------------------------------------------------------------------------------
    public Pline (IEnumerable<Point> pts) => (mPoints, Bound) = (pts.ToList (), new Bound (pts));
    #endregion
@@ -39,7 +40,8 @@ public class Pline {
 }
 
 
-public readonly struct Bound { // Bound in drawing space
+public readonly struct Bound {
+
    #region Constructors ------------------------------------------------------------------------------------
    public Bound (Point cornerA, Point cornerB) {
       MinX = Math.Min (cornerA.X, cornerB.X);

@@ -1,4 +1,4 @@
-﻿using DesignLib;
+﻿using DesignCraft.Lib;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,13 +9,14 @@ using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 namespace DesignCraft;
 
 public class DocManager {
-
    #region Implementation ------------------------------------------------------------------------
    public void Save () {
       if (!IsSaved) {
          SaveFileDialog save = new () { FileName = "Untitled", Filter = "Binary files (*.bin)|*.bin" };
-         if (save.ShowDialog () == DialogResult.OK) Save (save.FileName);
-         (IsSaved, SavedFileName) = (true, save.FileName);
+         if (save.ShowDialog () == DialogResult.OK) {
+            Save (save.FileName);
+            (IsSaved, SavedFileName) = (true, save.FileName);
+         }
       } else Save (SavedFileName);
    }
    void Save (string path) {
@@ -56,7 +57,7 @@ public class DocManager {
             List<Point> points = new ();
             for (int j = 0; j < pCount; j++) {
                var (x, y) = (reader.ReadDouble (), reader.ReadDouble ());
-               points.Add (PointConverter.ToCustomPoint (x, y));
+               points.Add (PointOperation.ToCustomPoint (x, y));
             }
             Drawing.AddPline (new Pline (points));
          }
@@ -74,6 +75,6 @@ public class DocManager {
    #region Private field -------------------------------------------------------------------------
    Drawing mDrawing = new ();
    bool mIsSaved = false;
-   string mSavedFileName = string.Empty;
+   string mSavedFileName = "Untitled";
    #endregion
 }

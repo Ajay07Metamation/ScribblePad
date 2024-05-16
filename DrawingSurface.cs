@@ -1,16 +1,15 @@
-﻿using DesignLib;
+﻿using DesignCraft.Lib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Point = DesignLib.Point;
+using Point = DesignCraft.Lib.Point;
 
 namespace DesignCraft;
+public class DrawingSurface : Canvas {
 
-public class Paint : Canvas {
-
-   #region Implementation -----------------------------------------------------------------------------------
+   #region OnRender override --------------------------------------------------------------------------------
    protected override void OnRender (DrawingContext dc) {
       base.OnRender (dc);
       var dwgCom = DrawingCommands.GetInstance;
@@ -21,9 +20,9 @@ public class Paint : Canvas {
    }
    #endregion
 
-   #region Properties ---------------------------------------------------------------------------------------
+   #region Field --------------------------------------------------------------------------------------------
    public Drawing Drawing;
-   public EntityWidget EntityBuilder;
+   public Widget EntityBuilder;
    public Matrix Xfm, mProjXfm = Matrix.Identity, mInvProjXfm = Matrix.Identity;
    #endregion
 }
@@ -31,13 +30,6 @@ public class DrawingCommands {
 
    #region Constructors -------------------------------------------------------------------------------------
    private DrawingCommands () { }
-   #endregion
-
-   #region Properties ---------------------------------------------------------------------------------------
-   public static DrawingCommands GetInstance { get { mDrawingCommands ??= new DrawingCommands (); return mDrawingCommands; } }
-   public DrawingContext DC { set => mDc = value; }
-   public Matrix Xfm { set => mXfm = value; }
-   public Brush Brush { get; set; }
    #endregion
 
    #region Implementation -----------------------------------------------------------------------------------
@@ -52,14 +44,21 @@ public class DrawingCommands {
    }
    public void DrawLine (Point startPt, Point endPt, Brush brush) {
       var pen = new Pen (brush, 1);
-      mDc.DrawLine (pen, mXfm.Transform (PointConverter.ToSystemPoint (startPt)), mXfm.Transform (PointConverter.ToSystemPoint (endPt)));
+      mDc.DrawLine (pen, mXfm.Transform (PointOperation.ToSystemPoint (startPt)), mXfm.Transform (PointOperation.ToSystemPoint (endPt)));
    }
    #endregion
 
-   #region Private ------------------------------------------------------------------------------------------
+   #region Properties ---------------------------------------------------------------------------------------
+   public static DrawingCommands GetInstance { get { mDrawingCommands ??= new DrawingCommands (); return mDrawingCommands; } }
+   public DrawingContext DC { set => mDc = value; }
+   public Matrix Xfm { set => mXfm = value; }
+   public Brush Brush { get; set; }
+   #endregion
+
+   #region Private Field ------------------------------------------------------------------------------------
    Matrix mXfm;
    DrawingContext mDc;
-   static DrawingCommands? mDrawingCommands;
+   static DrawingCommands mDrawingCommands;
    #endregion
 }
 
@@ -91,7 +90,7 @@ public class Drawing : IDrawable {
    public List<Pline> Plines => mPlines;
    #endregion
 
-   #region Private -----------------------------------------------------------------------------------------
+   #region Private Field -----------------------------------------------------------------------------------
    readonly List<Pline> mPlines = new ();
    #endregion
 }

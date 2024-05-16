@@ -1,5 +1,5 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
+using System;
 using System.Windows.Input;
 
 namespace DesignCraft;
@@ -25,9 +25,7 @@ class PanWidget {
    #region Implementation ----------------------------------------------------------------------------------------------
    bool IsPanning => mPrevPt != null;
 
-   void PanStart (Point pt) {
-      mPrevPt = pt;
-   }
+   void PanStart (Point pt) => mPrevPt = pt;
 
    void PanMove (Point pt) {
       mOnPan.Invoke (pt - mPrevPt!.Value);
