@@ -53,7 +53,7 @@ public abstract class Widget : Drawing, INotifyPropertyChanged {
       double zoomFactor = 1.05;
       if (e.Delta > 0)
          zoomFactor = 1 / zoomFactor;
-      var ptDraw = PointOperation.ToCustomPoint (mEventSource.mInvProjXfm.Transform (e.GetPosition (mEventSource))); // mouse point in drawing space
+      var ptDraw = PointOperation.ToCustomPoint (mEventSource.mInvProjXfm.Transform (e.GetPosition (mEventSource)));
       var cornerA = PointOperation.ToCustomPoint (mEventSource.mInvProjXfm.Transform (PointOperation.ToSystemPoint (mViewMargin, mViewMargin)));
       var cornerB = PointOperation.ToCustomPoint (mEventSource.mInvProjXfm.Transform (PointOperation.ToSystemPoint (mEventSource.ActualWidth - mViewMargin, mEventSource.ActualHeight - mViewMargin)));
       var b = new Bound (cornerA, cornerB);
@@ -75,8 +75,8 @@ public abstract class Widget : Drawing, INotifyPropertyChanged {
       this.IsModified = true;
    }
    void DrawingHover (Point drawingPt) { if (mFirstPt != null) PointHover (drawingPt); }
-   protected abstract void BuildEntity ();
-   public abstract void EndEntity ();
+   protected virtual void BuildEntity () { }
+   public virtual void EndEntity () { }
    #endregion
 
    #region PropertyChangedEventHandler --------------------------------------------------------------------
@@ -95,8 +95,7 @@ public abstract class Widget : Drawing, INotifyPropertyChanged {
       var tblock = new TextBlock () { Margin = new Thickness (10, 5, 10, 0), FontWeight = FontWeights.Bold };
       tblock.SetBinding (TextBlock.TextProperty, new Binding (nameof (Prompt)) { Source = this, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
       InputBar.Children.Add (tblock);
-      for (int i = 0, len = InputBox.Length; i < len; i++) {
-         var str = InputBox[i];
+      foreach (var str in InputBox) {
          var tBlock = new TextBlock () { Text = str + ":", Margin = new Thickness (5, 5, 5, 0) };
          var tBox = new TextBox () { Name = str + "TextBox", Width = 50, Height = 20 };
          tBox.PreviewKeyDown += Tb_PreviewKeyDown;
@@ -197,7 +196,8 @@ public class LineBuilder : Widget {
    #region Feedback ---------------------------------------------------------------------------------------
    public override void Draw (DrawingCommands drawingCommands) {
       if (mFirstPt == null || mHoverPt == null) return;
-      drawingCommands.DrawLine (mFirstPt.Value, mHoverPt.Value, Brushes.Red);
+      drawingCommands.Brush = Brushes.Red;
+      drawingCommands.DrawLine (mFirstPt.Value, mHoverPt.Value);
    }
    #endregion
    #endregion
@@ -261,6 +261,7 @@ public class RectBuilder : Widget {
    #region Feedback ---------------------------------------------------------------------------------------
    public override void Draw (DrawingCommands drawingCommands) {
       if (mFirstPt == null || mHoverPt == null) return;
+      drawingCommands.Brush = Brushes.Red;
       drawingCommands.DrawLines (new List<Point> { mFirstPt.Value, mCorner2, mHoverPt.Value, mCorner4, mFirstPt.Value });
    }
    #endregion
@@ -270,6 +271,7 @@ public class RectBuilder : Widget {
    #region Properties -------------------------------------------------------------------------------------
    public double Breadth { get => Math.Round (mBreadth, 3); set { mBreadth = value; OnPropertyChanged (nameof (Breadth)); } }
    protected override string[] InputBox => new string[] { nameof (X), nameof (Y), nameof (Length), nameof (Breadth) };
+
    #endregion
 
    #region Private Field ----------------------------------------------------------------------------------
@@ -279,6 +281,7 @@ public class RectBuilder : Widget {
 }
 
 public class CLineBuilder : Widget {
+
    #region Constructor ------------------------------------------------------------------------------------
    public CLineBuilder (DrawingSurface eventSource) : base (eventSource) {
       mPrompts = new string[] { " Connected Line: Pick start point", " Connected Line: Pick end point" };
@@ -347,11 +350,12 @@ public class CLineBuilder : Widget {
 
    #region Feedback ---------------------------------------------------------------------------------------
    public override void Draw (DrawingCommands drawingCommands) {
+      drawingCommands.Brush = Brushes.Red;
       if (mPoints.Count == 0) return;
       if (mPoints.Count >= 2)
          for (int i = 1; i < mPoints.Count; i++)
-            drawingCommands.DrawLine (mPoints[i - 1], mPoints[i], Brushes.Red);
-      if (mHoverPt != null) drawingCommands.DrawLine (mPoints[mPos], mHoverPt.Value, Brushes.Red);
+            drawingCommands.DrawLine (mPoints[i - 1], mPoints[i]);
+      if (mHoverPt != null) drawingCommands.DrawLine (mPoints[mPos], mHoverPt.Value);
    }
    #endregion
 

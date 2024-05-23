@@ -32,13 +32,14 @@ public class Pline {
    #region Properties --------------------------------------------------------------------------------------
    public Bound Bound { get; }
    public IEnumerable<Point> GetPoints () => mPoints;
+   public bool IsSelected { get => mIsSelected; set => mIsSelected = value; }
    #endregion
 
    #region Private Field -----------------------------------------------------------------------------------
    readonly List<Point> mPoints = new ();
+   bool mIsSelected = false;
    #endregion
 }
-
 
 public readonly struct Bound {
 
@@ -91,6 +92,7 @@ public readonly struct Bound {
       var maxY = ptAt.Y + (MaxY - ptAt.Y) * factor;
       return new () { MinX = minX, MaxX = maxX, MinY = minY, MaxY = maxY };
    }
+   public bool IsInside (Bound bound) => bound.MinX >= this.MinX && bound.MinY >= this.MinY && bound.MaxX <= this.MaxX && bound.MaxY <= this.MaxY;
    #endregion
 }
 public struct Point {

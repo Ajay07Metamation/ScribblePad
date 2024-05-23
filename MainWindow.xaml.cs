@@ -46,6 +46,9 @@ public partial class MainWindow : Window {
 
    void OnShape_Click (object sender, RoutedEventArgs e) {
       mWidget?.Detach ();
+      mSelector?.Deselect ();
+      mSelector?.Detach ();
+      mSelector = null;
       if (sender is ToggleButton toggleButton) int.TryParse (toggleButton.Tag?.ToString (), out mType);
       mWidget = mType switch {
          1 => new LineBuilder (mDwgSurface),
@@ -57,11 +60,21 @@ public partial class MainWindow : Window {
       mWidget.Drawing = mDrawing;
       mWidget.Attach ();
    }
+   private void OnPick_Click (object sender, RoutedEventArgs e) {
+      mWidget?.Detach ();
+      mSelector?.Detach ();
+      mSelector = new Selector (mDwgSurface);
+      mDwgSurface.Selection = mSelector;
+   }
    #endregion
 
    #region Drawing Editor ----------------------------------------------------------------------------------
    void OnRedo_Click (object sender, RoutedEventArgs e) => mDrawingEditor.Redo ();
    void OnUndo_Click (object sender, RoutedEventArgs e) => mDrawingEditor.Undo ();
+   void OnDelete_Click (object sender, RoutedEventArgs e) {
+      mDrawingEditor.DeleteSelecetedEntity ();
+      mWidget.IsModified = true;
+   }
    #endregion
 
    #region Menu Items --------------------------------------------------------------------------------------
@@ -76,6 +89,7 @@ public partial class MainWindow : Window {
          CheckAndPrompt ();
       mDocManager.Load ();
       SetTitle ();
+      mWidget = new LineBuilder (mDwgSurface);
    }
 
    void OnSave_Click (object sender, RoutedEventArgs e) {
@@ -100,7 +114,9 @@ public partial class MainWindow : Window {
    }
 
    void OnPreviewKeyDown (object sender, KeyEventArgs e) {
-      if (e.Key == Key.Escape) mWidget.EndEntity ();
+      if (e.Key == Key.Escape)
+         if (mSelector != null) mSelector.Deselect ();
+         else mWidget.EndEntity ();
       else Shortcuts (sender, e);
    }
 
@@ -123,11 +139,11 @@ public partial class MainWindow : Window {
    void Shortcuts (object sender, KeyEventArgs e) {
       if (Keyboard.Modifiers == ModifierKeys.Control)
          switch (e.Key) {
-            case Key.Z: OnUndo_Click (sender, e); break;
-            case Key.Y: OnRedo_Click (sender, e); break;
-            case Key.N: OnNew_Click (sender, e); mDocManager.SavedFileName = "Untitled"; break;
+            case Key.N: OnNew_Click (sender, e); mDocManager.SavedFileName = ""; break;
             case Key.S: OnSave_Click (sender, e); break;
             case Key.O: OnOpen_Click (sender, e); break;
+            case Key.Z: OnUndo_Click (sender, e); break;
+            case Key.Y: OnRedo_Click (sender, e); break;
          } else if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key == Key.F4) {
          Window window = new ();
          window.Close ();
@@ -162,6 +178,7 @@ public partial class MainWindow : Window {
    #endregion
 
    #region Private Field ---------------------------------------------------------------------------------------------
+   Selector mSelector;
    Widget mWidget;
    Drawing mDrawing = new ();
    DrawingEditor mDrawingEditor = new ();

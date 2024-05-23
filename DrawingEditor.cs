@@ -8,31 +8,39 @@ public class DrawingEditor {
 
    #region Implementation---------------------------------------------------------------------------------
    public void Undo () {
-      if (Drawing.Count != 0) {
-         int last = Drawing.Count - 1;
+      if (mDrawing.Count != 0) {
+         int last = mDrawing.Count - 1;
          mUndoRedo.Push (Drawing.Plines[last]);
-         Drawing.Plines.RemoveAt (last);
-         EntityCount = Drawing.Count;
+         mDrawing.Plines.RemoveAt (last);
+         EntityCount = mDrawing.Count;
       }
-      Drawing.RedrawReq ();
+      mDrawing.RedrawReq ();
    }
 
    public void Redo () {
       if (mUndoRedo.Count != 0) {
          var pLine = mUndoRedo.Pop ();
-         Drawing.AddPline (pLine);
-         EntityCount = Drawing.Count;
+         mDrawing.AddPline (pLine);
+         EntityCount = mDrawing.Count;
       }
-      Drawing.RedrawReq ();
+      mDrawing.RedrawReq ();
+   }
+
+   public void DeleteSelecetedEntity () {
+      var deletedPLines = mDrawing.Plines.Where (x => x.IsSelected).ToList ();
+      foreach (var pLine in deletedPLines)
+         mUndoRedo.Push (pLine);
+      mDrawing.Plines.RemoveAll (x => x.IsSelected);
+      mDrawing.RedrawReq ();
    }
 
    // Determine whether undo or redo can be executed
-   public void CanRedo (object sender, CanExecuteRoutedEventArgs e) { e.CanExecute = mUndoRedo.Any () && EntityCount == Drawing.Count; if (!e.CanExecute) mUndoRedo.Clear (); }
-   public void CanUndo (object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = Drawing.Plines.Any ();
+   public void CanRedo (object sender, CanExecuteRoutedEventArgs e) { e.CanExecute = mUndoRedo.Any () && EntityCount == mDrawing.Count; if (!e.CanExecute) mUndoRedo.Clear (); }
+   public void CanUndo (object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = mDrawing.Plines.Any ();
 
    /// <summary>Clear the display</summary>
    public void Clear () {
-      if (Drawing.Count != 0) { Drawing.Clear (); mUndoRedo.Clear (); Drawing.RedrawReq (); }
+      if (mDrawing.Count != 0) { mDrawing.Clear (); mUndoRedo.Clear (); mDrawing.RedrawReq (); }
    }
 
 

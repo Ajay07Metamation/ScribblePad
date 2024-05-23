@@ -31,10 +31,12 @@
     <None Remove=".gitignore" />
     <None Remove="Icons\clear.png" />
     <None Remove="Icons\cline.png" />
+    <None Remove="Icons\eraser.png" />
     <None Remove="Icons\line.png" />
     <None Remove="Icons\Logo.png" />
     <None Remove="Icons\new.png" />
     <None Remove="Icons\open.png" />
+    <None Remove="Icons\Pick.png" />
     <None Remove="Icons\rectangle.png" />
     <None Remove="Icons\redo.png" />
     <None Remove="Icons\save.png" />
@@ -44,6 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Icons\eraser.png" />
     <Resource Include="Icons\Logo.png" />
   </ItemGroup>
 
@@ -56,6 +59,7 @@
     <Resource Include="Icons\line.png" />
     <Resource Include="Icons\new.png" />
     <Resource Include="Icons\open.png" />
+    <Resource Include="Icons\Pick.png" />
     <Resource Include="Icons\rectangle.png" />
     <Resource Include="Icons\redo.png" />
     <Resource Include="Icons\save.png" />

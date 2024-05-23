@@ -68,24 +68,35 @@
                 <Button x:Name="mRedo" Style="{StaticResource ButtonStyle}" Command="{x:Static local:MainWindow.Redo}" Click="OnRedo_Click" Margin="5,5" ToolTip="Redo">
                     <Image Source="Icons/redo.png"/>
                 </Button>
+                <Button x:Name="mEraser" Style="{StaticResource ButtonStyle}" Click="OnDelete_Click" Margin="5,5" ToolTip="Delete">
+                    <Image Source="Icons/eraser.png"/>
+                </Button>
             </StackPanel>
             <TextBlock x:Name="mInfoBar" Height="25" Background="#F5F5F5" FontSize="14"/>
         </StackPanel>
         <Separator DockPanel.Dock="Top"/>
-        <WrapPanel x:Name="mPanel" DockPanel.Dock="Left" Background="#F5F5F5" Margin="0,0,-1,0">
-            <ToggleButton x:Name="mLineTool" Style="{StaticResource TButtonStyle}" Tag="1" Click="OnShape_Click" Margin="5,5" ToolTip="Line">
-                <Image Source="Icons/line.png"/>
-            </ToggleButton>
-            <ToggleButton x:Name="mRectangleTool" Style="{StaticResource TButtonStyle}" Tag="2" Click="OnShape_Click" Margin="5,5" ToolTip="Rectangle">
-                <Image Source="Icons/rectangle.png"/>
-            </ToggleButton>
-            <ToggleButton x:Name="mCLineTool" Style="{StaticResource TButtonStyle}" Tag="3" Click="OnShape_Click" Margin="5,5" ToolTip="Connected Line">
-                <Image Source="Icons/cline.png"/>
-            </ToggleButton>
-        </WrapPanel>
+        <StackPanel DockPanel.Dock="Left" Background="#F5F5F5" Margin="0,0,-1,0" Orientation="Vertical">
+            <TextBlock Text="Pick" Width="26"/>
+            <Separator/>
+            <Button x:Name="mPickTool" Style="{StaticResource ButtonStyle}" Click="OnPick_Click" Margin="5,5" ToolTip="Pick">
+                <Image Source="Icons/Pick.png"/>
+            </Button>
+            <Separator/>
+            <StackPanel x:Name="mPanel" Orientation="Horizontal">
+                <ToggleButton x:Name="mLineTool" Style="{StaticResource TButtonStyle}" Tag="1" Click="OnShape_Click" Margin="5,5" ToolTip="Line">
+                    <Image Source="Icons/line.png"/>
+                </ToggleButton>
+                <ToggleButton x:Name="mRectangleTool" Style="{StaticResource TButtonStyle}" Tag="2" Click="OnShape_Click" Margin="5,5" ToolTip="Rectangle">
+                    <Image Source="Icons/rectangle.png"/>
+                </ToggleButton>
+                <ToggleButton x:Name="mCLineTool" Style="{StaticResource TButtonStyle}" Tag="3" Click="OnShape_Click" Margin="5,5" ToolTip="Connected Line">
+                    <Image Source="Icons/cline.png"/>
+                </ToggleButton>
+            </StackPanel>
+        </StackPanel>
         <StackPanel x:Name="mInputBar" Height="30" Background="#F5F5F5" Orientation="Horizontal" DockPanel.Dock="Top"/>
         <Border BorderBrush="DimGray" BorderThickness="1" DockPanel.Dock="Top">
-            <local:DrawingSurface x:Name="mDwgSurface" Background="White" ClipToBounds="True" DockPanel.Dock="Top"/>
+            <local:DrawingSurface x:Name="mDwgSurface" Background="White" Cursor="Cross" ClipToBounds="True" DockPanel.Dock="Top"/>
         </Border>
     </DockPanel>
 </Window>

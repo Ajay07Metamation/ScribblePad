@@ -4,7 +4,6 @@ using System.Windows.Media;
 
 namespace DesignCraft;
 static class Util {
-
    #region Implementation -----------------------------------------------------------------------
    public static Matrix ComputeZoomExtentsProjXfm (double viewWidth, double viewHeight, double viewMargin, Bound b) {
       double scaleX = (viewWidth - 2 * viewMargin) / b.Width, scaleY = (viewHeight - 2 * viewMargin) / b.Height;
@@ -20,7 +19,6 @@ static class Util {
 }
 
 public static class PointOperation {
-
    #region Implementation -----------------------------------------------------------------------
    public static Point ToCustomPoint (double x, double y) => new Point (x, y);
    public static Point ToCustomPoint (System.Windows.Point point) => new Point (point.X, point.Y);
